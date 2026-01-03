@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - PromptMap{% endblock %}
+{% block nav_settings %}active{% endblock %}
+
+{% block content %}
+<div class="settings">
+    <div class="page-header">
+        <h2>Configuration Settings</h2>
+        <p>Configure API keys, models, and test parameters</p>
+    </div>
+
+    <form id="settings-form">
+        <!-- API Keys Section -->
+        <div class="card">
+            <h3>API Keys</h3>
+            <p class="section-description">Enter your API keys for different LLM providers</p>
+            <div class="security-warning" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
+                <strong>⚠️ Security Notice:</strong> API keys are stored in your browser's localStorage. They are not sent to any external servers, but may be accessible to scripts running on this domain. Only use this interface on trusted networks and devices.
+            </div>
+            
+            <div class="form-group">
+                <label for="openai-api-key">
+                    OpenAI API Key
+                    <span class="help-text">For GPT models</span>
+                </label>
+                <input type="password" id="openai-api-key" name="openai_api_key" 
+                       placeholder="sk-...">
+            </div>
+
+            <div class="form-group">
+                <label for="anthropic-api-key">
+                    Anthropic API Key
+                    <span class="help-text">For Claude models</span>
+                </label>
+                <input type="password" id="anthropic-api-key" name="anthropic_api_key" 
+                       placeholder="sk-ant-...">
+            </div>
+
+            <div class="form-group">
+                <label for="google-api-key">
+                    Google API Key
+                    <span class="help-text">For Gemini models</span>
+                </label>
+                <input type="password" id="google-api-key" name="google_api_key" 
+                       placeholder="AI...">
+            </div>
+
+            <div class="form-group">
+                <label for="xai-api-key">
+                    XAI API Key
+                    <span class="help-text">For Grok models</span>
+                </label>
+                <input type="password" id="xai-api-key" name="xai_api_key" 
+                       placeholder="xai-...">
+            </div>
+        </div>
+
+        <!-- Model Configuration -->
+        <div class="card">
+            <h3>Model Configuration</h3>
+            <p class="section-description">Configure target and controller models</p>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="target-model-type">Target Model Type *</label>
+                    <select id="target-model-type" name="target_model_type" required>
+                        <option value="">Select type...</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="anthropic">Anthropic</option>
+                        <option value="google">Google</option>
+                        <option value="xai">XAI</option>
+                        <option value="ollama">Ollama (Local)</option>
+                        <option value="http">HTTP (Black-box)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="target-model">Target Model Name *</label>
+                    <input type="text" id="target-model" name="target_model" 
+                           placeholder="e.g., gpt-4o" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="controller-model-type">Controller Model Type *</label>
+                    <select id="controller-model-type" name="controller_model_type" required>
+                        <option value="">Select type...</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="anthropic">Anthropic</option>
+                        <option value="google">Google</option>
+                        <option value="xai">XAI</option>
+                        <option value="ollama">Ollama (Local)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="controller-model">Controller Model Name *</label>
+                    <input type="text" id="controller-model" name="controller_model" 
+                           placeholder="e.g., gpt-4o" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="ollama-url">
+                    Ollama Server URL
+                    <span class="help-text">For local Ollama models</span>
+                </label>
+                <input type="text" id="ollama-url" name="ollama_url" 
+                       value="http://localhost:11434">
+            </div>
+        </div>
+
+        <!-- Testing Configuration -->
+        <div class="card">
+            <h3>Testing Configuration</h3>
+            
+            <div class="form-group">
+                <label for="system-prompts">
+                    System Prompts
+                    <span class="help-text">Path to system prompts file (relative to project root)</span>
+                </label>
+                <input type="text" id="system-prompts" name="system_prompts_path" 
+                       value="system-prompts.txt">
+            </div>
+
+            <div class="form-group">
+                <label for="http-config">
+                    HTTP Config File
+                    <span class="help-text">Required for black-box (HTTP) testing</span>
+                </label>
+                <input type="text" id="http-config" name="http_config_path" 
+                       placeholder="path/to/http-config.yaml">
+            </div>
+
+            <div class="form-group">
+                <label for="iterations">
+                    Number of Iterations: <span id="iterations-value">3</span>
+                </label>
+                <input type="range" id="iterations" name="iterations" 
+                       min="1" max="20" value="3" 
+                       oninput="document.getElementById('iterations-value').textContent = this.value">
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="firewall-mode" name="firewall_mode">
+                    <span>Firewall Mode</span>
+                </label>
+                <p class="help-text">Test a firewall LLM that blocks malicious prompts</p>
+            </div>
+
+            <div class="form-group" id="pass-condition-group" style="display: none;">
+                <label for="pass-condition">
+                    Pass Condition
+                    <span class="help-text">Expected response in firewall mode</span>
+                </label>
+                <input type="text" id="pass-condition" name="pass_condition" 
+                       placeholder="e.g., true">
+            </div>
+        </div>
+
+        <!-- Rule Selection -->
+        <div class="card">
+            <h3>Rule Selection</h3>
+            <p class="section-description">Select which security tests to run</p>
+            
+            <div class="rule-category-controls">
+                <button type="button" class="btn btn-sm" onclick="selectAllRules()">Select All</button>
+                <button type="button" class="btn btn-sm" onclick="deselectAllRules()">Deselect All</button>
+            </div>
+
+            <div id="rule-categories" class="rule-categories">
+                <div class="loading">Loading rules...</div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <button type="button" class="btn btn-secondary" onclick="loadSettings()">Load Saved</button>
+            <button type="button" class="btn btn-danger" onclick="clearSettings()">Clear All</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

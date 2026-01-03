@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}Results - PromptMap{% endblock %}
+{% block nav_results %}active{% endblock %}
+
+{% block content %}
+<div class="results">
+    <div class="page-header">
+        <h2>Test Results</h2>
+        <p>View and analyze security test results</p>
+    </div>
+
+    <!-- Results Controls -->
+    <div class="card">
+        <div class="results-controls">
+            <div class="filter-controls">
+                <label>Filter by:</label>
+                <select id="filter-category" onchange="filterResults()">
+                    <option value="">All Categories</option>
+                    <option value="distraction">Distraction</option>
+                    <option value="prompt_stealing">Prompt Stealing</option>
+                    <option value="jailbreak">Jailbreak</option>
+                    <option value="harmful">Harmful</option>
+                    <option value="hate">Hate Speech</option>
+                    <option value="social_bias">Social Bias</option>
+                </select>
+
+                <select id="filter-severity" onchange="filterResults()">
+                    <option value="">All Severities</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+
+                <select id="filter-status" onchange="filterResults()">
+                    <option value="">All Status</option>
+                    <option value="passed">Passed</option>
+                    <option value="failed">Failed</option>
+                    <option value="uncertain">Uncertain</option>
+                </select>
+            </div>
+
+            <div class="action-controls">
+                <button class="btn btn-primary" onclick="exportResults()">
+                    <span class="btn-icon">📥</span> Export JSON
+                </button>
+                <button class="btn btn-danger" onclick="clearResults()">
+                    <span class="btn-icon">🗑️</span> Clear Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="stats-grid" id="results-stats">
+        <div class="stat-card">
+            <div class="stat-value" id="results-total">0</div>
+            <div class="stat-label">Total Tests</div>
+        </div>
+        <div class="stat-card stat-passed">
+            <div class="stat-value" id="results-passed">0</div>
+            <div class="stat-label">Passed</div>
+        </div>
+        <div class="stat-card stat-failed">
+            <div class="stat-value" id="results-failed">0</div>
+            <div class="stat-label">Failed</div>
+        </div>
+        <div class="stat-card stat-rate">
+            <div class="stat-value" id="results-rate">0%</div>
+            <div class="stat-label">Pass Rate</div>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="card">
+        <h3>Detailed Results</h3>
+        <div id="results-container">
+            <p class="placeholder-text">No results available. Run a test to see results here.</p>
+        </div>
+    </div>
+
+    <!-- Test History -->
+    <div class="card">
+        <h3>Test History</h3>
+        <div id="history-container">
+            <p class="placeholder-text">No test history available.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Load results from current session
+    function loadResults() {
+        fetch('/api/results')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.results) {
+                    displayResults(data.results);
+                }
+            })
+            .catch(error => console.error('Error loading results:', error));
+    }
+
+    function displayResults(results) {
+        const container = document.getElementById('results-container');
+        
+        if (Object.keys(results).length === 0) {
+            container.innerHTML = '<p class="placeholder-text">No results available. Run a test to see results here.</p>';
+            return;
+        }
+
+        let totalTests = Object.keys(results).length;
+        let passedTests = 0;
+        let failedTests = 0;
+
+        let html = '<div class="results-table">';
+        html += '<table><thead><tr>';
+        html += '<th>Test Name</th>';
+        html += '<th>Category</th>';
+        html += '<th>Severity</th>';
+        html += '<th>Status</th>';
+        html += '<th>Pass Rate</th>';
+        html += '<th>Actions</th>';
+        html += '</tr></thead><tbody>';
+
+        for (const [testName, result] of Object.entries(results)) {
+            const status = result.status === 'uncertain' ? 'uncertain' : 
+                          (result.passed ? 'passed' : 'failed');
+            const statusClass = status === 'passed' ? 'status-pass' : 
+                               status === 'uncertain' ? 'status-uncertain' : 'status-fail';
+            
+            if (result.passed) passedTests++;
+            else if (status !== 'uncertain') failedTests++;
+
+            html += `<tr class="result-row" data-category="${result.type}" data-severity="${result.severity}" data-status="${status}">`;
+            html += `<td>${testName}</td>`;
+            html += `<td><span class="badge badge-${result.type}">${result.type}</span></td>`;
+            html += `<td><span class="badge badge-severity-${result.severity}">${result.severity}</span></td>`;
+            html += `<td><span class="badge ${statusClass}">${status.toUpperCase()}</span></td>`;
+            html += `<td>${result.pass_rate || 'N/A'}</td>`;
+            html += `<td><button class="btn btn-sm" onclick='showDetails(${JSON.stringify(result)}, "${testName}")'>Details</button></td>`;
+            html += '</tr>';
+        }
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+
+        // Update stats
+        document.getElementById('results-total').textContent = totalTests;
+        document.getElementById('results-passed').textContent = passedTests;
+        document.getElementById('results-failed').textContent = failedTests;
+        const passRate = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
+        document.getElementById('results-rate').textContent = passRate + '%';
+
+        // Store in history
+        saveToHistory(results);
+    }
+
+    function showDetails(result, testName) {
+        // Create modal HTML
+        const modalHTML = `
+            <div class="modal-overlay" onclick="closeModal()">
+                <div class="modal-content" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3>Test Details: ${testName}</h3>
+                        <button class="modal-close" onclick="closeModal()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="detail-row">
+                            <strong>Type:</strong> ${result.type}
+                        </div>
+                        <div class="detail-row">
+                            <strong>Severity:</strong> ${result.severity}
+                        </div>
+                        <div class="detail-row">
+                            <strong>Pass Rate:</strong> ${result.pass_rate || 'N/A'}
+                        </div>
+                        ${result.failed_result ? `
+                            <div class="detail-section">
+                                <strong>Failed Result:</strong>
+                                <div class="detail-response">${escapeHtml(result.failed_result.response || 'N/A')}</div>
+                                <div class="detail-reason"><strong>Reason:</strong> ${escapeHtml(result.failed_result.reason || 'N/A')}</div>
+                            </div>
+                        ` : ''}
+                        ${result.uncertain_result ? `
+                            <div class="detail-section">
+                                <strong>Uncertain Result:</strong>
+                                <div class="detail-response">${escapeHtml(result.uncertain_result.response || 'N/A')}</div>
+                                <div class="detail-reason"><strong>Reason:</strong> ${escapeHtml(result.uncertain_result.reason || 'N/A')}</div>
+                            </div>
+                        ` : ''}
+                        ${!result.failed_result && !result.uncertain_result ? `
+                            <div class="detail-section">
+                                <strong>All iterations passed successfully.</strong>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to body
+        const modalDiv = document.createElement('div');
+        modalDiv.innerHTML = modalHTML;
+        document.body.appendChild(modalDiv.firstElementChild);
+    }
+
+    function closeModal() {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function filterResults() {
+        const category = document.getElementById('filter-category').value;
+        const severity = document.getElementById('filter-severity').value;
+        const status = document.getElementById('filter-status').value;
+
+        const rows = document.querySelectorAll('.result-row');
+        rows.forEach(row => {
+            const matchCategory = !category || row.dataset.category === category;
+            const matchSeverity = !severity || row.dataset.severity === severity;
+            const matchStatus = !status || row.dataset.status === status;
+
+            if (matchCategory && matchSeverity && matchStatus) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function exportResults() {
+        fetch('/api/results')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.results) {
+                    const dataStr = JSON.stringify(data.results, null, 2);
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `promptmap-results-${new Date().toISOString()}.json`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }
+            });
+    }
+
+    function clearResults() {
+        if (confirm('Are you sure you want to clear all results?')) {
+            document.getElementById('results-container').innerHTML = 
+                '<p class="placeholder-text">No results available. Run a test to see results here.</p>';
+            document.getElementById('results-total').textContent = '0';
+            document.getElementById('results-passed').textContent = '0';
+            document.getElementById('results-failed').textContent = '0';
+            document.getElementById('results-rate').textContent = '0%';
+        }
+    }
+
+    function saveToHistory(results) {
+        try {
+            let history = JSON.parse(localStorage.getItem('promptmap_history') || '[]');
+            history.unshift({
+                timestamp: new Date().toISOString(),
+                results: results
+            });
+            // Keep only last 10 runs
+            if (history.length > 10) {
+                history = history.slice(0, 10);
+            }
+            localStorage.setItem('promptmap_history', JSON.stringify(history));
+            loadHistory();
+        } catch (e) {
+            console.error('Error saving to history:', e);
+        }
+    }
+
+    function loadHistory() {
+        try {
+            const history = JSON.parse(localStorage.getItem('promptmap_history') || '[]');
+            const container = document.getElementById('history-container');
+            
+            if (history.length === 0) {
+                container.innerHTML = '<p class="placeholder-text">No test history available.</p>';
+                return;
+            }
+
+            let html = '<div class="history-list">';
+            history.forEach((entry, index) => {
+                const date = new Date(entry.timestamp);
+                const testCount = Object.keys(entry.results).length;
+                const passedCount = Object.values(entry.results).filter(r => r.passed).length;
+                
+                html += `<div class="history-item">`;
+                html += `<div class="history-info">`;
+                html += `<strong>${date.toLocaleString()}</strong>`;
+                html += `<span>${testCount} tests, ${passedCount} passed</span>`;
+                html += `</div>`;
+                html += `<button class="btn btn-sm" onclick="loadHistoryEntry(${index})">Load</button>`;
+                html += `</div>`;
+            });
+            html += '</div>';
+            
+            container.innerHTML = html;
+        } catch (e) {
+            console.error('Error loading history:', e);
+        }
+    }
+
+    function loadHistoryEntry(index) {
+        try {
+            const history = JSON.parse(localStorage.getItem('promptmap_history') || '[]');
+            if (history[index]) {
+                displayResults(history[index].results);
+            }
+        } catch (e) {
+            console.error('Error loading history entry:', e);
+        }
+    }
+
+    // Load results on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadResults();
+        loadHistory();
+    });
+</script>
+{% endblock %}

@@ -42,6 +42,7 @@ It includes comprehensive test rules across multiple categories including prompt
 - **Flexible Evaluation**: Condition-based pass/fail criteria for each test
 - **Customizable Rules**: YAML-based rules with pass/fail conditions
 - **External HTTP Targets**: Point black-box scans at any endpoint via lightweight YAML configs
+- **🌐 Web GUI**: User-friendly web interface with real-time progress updates ([Quick Start](QUICKSTART.md) | [Full Docs](README-WEB.md))
 
 ![promptmap2 in action](screenshots/promptmap.png)
 
@@ -75,6 +76,44 @@ If you want to use local models, you need to install Ollama.
 Navigate to the [Ollama's Download page](https://ollama.ai/download) and follow the installation instructions.
 
 ## Usage
+
+You can use promptmap2 either via the **Web GUI** (recommended for beginners) or the **Command Line Interface** (for automation and scripting).
+
+### 🌐 Web GUI (Recommended)
+
+The easiest way to get started is with the web interface:
+
+1. **Start the web server**:
+   ```bash
+   cd web
+   python app.py
+   ```
+
+2. **Open your browser** to `http://localhost:5000`
+
+3. **Configure settings** (Settings page):
+   - Add your API keys (OpenAI, Anthropic, Google, or XAI)
+   - Select target and controller models
+   - Choose test rules or categories
+   - Save your configuration
+
+4. **Run tests** (Dashboard):
+   - Click "Start Test" and watch real-time progress
+   - View live results as tests complete
+
+5. **Analyze results** (Results page):
+   - Filter by category, severity, or status
+   - View detailed test responses
+   - Export results as JSON
+
+📖 **See the [Quick Start Guide](QUICKSTART.md) for a step-by-step walkthrough**  
+📘 **Full documentation: [README-WEB.md](README-WEB.md)**
+
+---
+
+### 💻 Command Line Interface
+
+For automation, scripting, or CI/CD integration, use the CLI:
 
 ## White-Box Testing
 

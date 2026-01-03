@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PromptMap Web GUI{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>🤖 PromptMap</h1>
+                <span class="subtitle">LLM Security Scanner</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/" class="{% block nav_dashboard %}{% endblock %}">Dashboard</a></li>
+                <li><a href="/settings" class="{% block nav_settings %}{% endblock %}">Settings</a></li>
+                <li><a href="/results" class="{% block nav_results %}{% endblock %}">Results</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 PromptMap - LLM Security Testing Tool</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/websocket.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

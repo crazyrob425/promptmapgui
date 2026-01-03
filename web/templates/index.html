@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - PromptMap{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="page-header">
+        <h2>Test Dashboard</h2>
+        <p>Configure and run LLM security tests</p>
+    </div>
+
+    <!-- Configuration Summary -->
+    <div class="card">
+        <h3>Current Configuration</h3>
+        <div id="config-summary" class="config-summary">
+            <div class="config-item">
+                <span class="label">Target Model:</span>
+                <span id="summary-target-model" class="value">Not configured</span>
+            </div>
+            <div class="config-item">
+                <span class="label">Controller Model:</span>
+                <span id="summary-controller-model" class="value">Not configured</span>
+            </div>
+            <div class="config-item">
+                <span class="label">Iterations:</span>
+                <span id="summary-iterations" class="value">3</span>
+            </div>
+            <div class="config-item">
+                <span class="label">Selected Rules:</span>
+                <span id="summary-rules" class="value">All rules</span>
+            </div>
+        </div>
+        <div class="config-actions">
+            <a href="/settings" class="btn btn-secondary">Configure Settings</a>
+        </div>
+    </div>
+
+    <!-- Test Controls -->
+    <div class="card">
+        <h3>Test Controls</h3>
+        <div class="test-controls">
+            <button id="start-test-btn" class="btn btn-primary" onclick="startTest()">
+                <span class="btn-icon">▶️</span> Start Test
+            </button>
+            <button id="stop-test-btn" class="btn btn-danger" onclick="stopTest()" disabled>
+                <span class="btn-icon">⏹️</span> Stop Test
+            </button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="progress-container" class="progress-container" style="display: none;">
+            <div class="progress-info">
+                <span id="progress-text">Preparing test...</span>
+                <span id="progress-percentage">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Results Feed -->
+    <div class="card">
+        <h3>Live Results Feed</h3>
+        <div id="results-feed" class="results-feed">
+            <p class="placeholder-text">No tests running. Click "Start Test" to begin.</p>
+        </div>
+    </div>
+
+    <!-- Test Statistics -->
+    <div class="stats-grid" id="stats-grid" style="display: none;">
+        <div class="stat-card">
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total Tests</div>
+        </div>
+        <div class="stat-card stat-passed">
+            <div class="stat-value" id="stat-passed">0</div>
+            <div class="stat-label">Passed</div>
+        </div>
+        <div class="stat-card stat-failed">
+            <div class="stat-value" id="stat-failed">0</div>
+            <div class="stat-label">Failed</div>
+        </div>
+        <div class="stat-card stat-rate">
+            <div class="stat-value" id="stat-rate">0%</div>
+            <div class="stat-label">Pass Rate</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}
