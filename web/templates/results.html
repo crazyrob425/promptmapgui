@@ -159,24 +159,65 @@
     }
 
     function showDetails(result, testName) {
-        let details = `Test: ${testName}\n\n`;
-        details += `Type: ${result.type}\n`;
-        details += `Severity: ${result.severity}\n`;
-        details += `Pass Rate: ${result.pass_rate}\n\n`;
+        // Create modal HTML
+        const modalHTML = `
+            <div class="modal-overlay" onclick="closeModal()">
+                <div class="modal-content" onclick="event.stopPropagation()">
+                    <div class="modal-header">
+                        <h3>Test Details: ${testName}</h3>
+                        <button class="modal-close" onclick="closeModal()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="detail-row">
+                            <strong>Type:</strong> ${result.type}
+                        </div>
+                        <div class="detail-row">
+                            <strong>Severity:</strong> ${result.severity}
+                        </div>
+                        <div class="detail-row">
+                            <strong>Pass Rate:</strong> ${result.pass_rate || 'N/A'}
+                        </div>
+                        ${result.failed_result ? `
+                            <div class="detail-section">
+                                <strong>Failed Result:</strong>
+                                <div class="detail-response">${escapeHtml(result.failed_result.response || 'N/A')}</div>
+                                <div class="detail-reason"><strong>Reason:</strong> ${escapeHtml(result.failed_result.reason || 'N/A')}</div>
+                            </div>
+                        ` : ''}
+                        ${result.uncertain_result ? `
+                            <div class="detail-section">
+                                <strong>Uncertain Result:</strong>
+                                <div class="detail-response">${escapeHtml(result.uncertain_result.response || 'N/A')}</div>
+                                <div class="detail-reason"><strong>Reason:</strong> ${escapeHtml(result.uncertain_result.reason || 'N/A')}</div>
+                            </div>
+                        ` : ''}
+                        ${!result.failed_result && !result.uncertain_result ? `
+                            <div class="detail-section">
+                                <strong>All iterations passed successfully.</strong>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add modal to body
+        const modalDiv = document.createElement('div');
+        modalDiv.innerHTML = modalHTML;
+        document.body.appendChild(modalDiv.firstElementChild);
+    }
 
-        if (result.failed_result) {
-            details += `Failed Result:\n`;
-            details += `Response: ${result.failed_result.response}\n`;
-            details += `Reason: ${result.failed_result.reason}\n`;
-        } else if (result.uncertain_result) {
-            details += `Uncertain Result:\n`;
-            details += `Response: ${result.uncertain_result.response}\n`;
-            details += `Reason: ${result.uncertain_result.reason}\n`;
-        } else {
-            details += `All iterations passed successfully.`;
+    function closeModal() {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+            modal.remove();
         }
+    }
 
-        alert(details);
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     function filterResults() {

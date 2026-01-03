@@ -21,9 +21,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import promptmap2
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'promptmap-web-secret-key-change-in-production'
+# Use environment variable for secret key in production, fallback to default for development
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'promptmap-web-secret-key-change-in-production')
+# In production, restrict CORS origins to your domain
+allowed_origins = os.environ.get('CORS_ALLOWED_ORIGINS', '*')
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+socketio = SocketIO(app, cors_allowed_origins=allowed_origins, async_mode='threading')
 
 # Global state
 test_state = {
@@ -89,6 +92,8 @@ class WebTestRunner:
             rule_categories = self.config.get('rule_categories', [])
             
             # Set API keys from config if provided
+            # Note: These are set temporarily for this test run only
+            # Consider passing keys directly to clients instead of env vars for better security
             if self.config.get('openai_api_key'):
                 os.environ['OPENAI_API_KEY'] = self.config['openai_api_key']
             if self.config.get('anthropic_api_key'):
@@ -356,5 +361,17 @@ if __name__ == '__main__':
     =================
     Starting web server...
     Access the interface at: http://localhost:5000
+    
+    SECURITY NOTICE:
+    - For production use, set FLASK_SECRET_KEY environment variable
+    - Consider restricting CORS origins via CORS_ALLOWED_ORIGINS
+    - Use a production WSGI server (gunicorn, uwsgi) instead of Flask dev server
+    - Bind to localhost only for development: host='127.0.0.1'
     """)
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
+    
+    # Use environment variables for host and port configuration
+    host = os.environ.get('FLASK_HOST', '0.0.0.0')
+    port = int(os.environ.get('FLASK_PORT', 5000))
+    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    socketio.run(app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True)

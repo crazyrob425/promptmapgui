@@ -262,10 +262,32 @@ pip install -r web/requirements-web.txt
 
 ## Security Considerations
 
+### API Key Storage
 - **API Keys**: Stored in browser localStorage - not transmitted to any external servers
 - **Local Storage**: All data is stored locally in your browser
-- **HTTPS**: For production use, deploy behind HTTPS proxy (nginx, Apache)
-- **Secrets**: Never commit API keys to version control
+- **Risk**: API keys in localStorage may be accessible to scripts running on this domain
+- **Recommendation**: Only use this interface on trusted networks and devices
+
+### Production Deployment Security
+- **Secret Key**: Set `FLASK_SECRET_KEY` environment variable to a secure random value
+- **CORS Origins**: Restrict allowed origins via `CORS_ALLOWED_ORIGINS` environment variable
+- **Network Binding**: For development, bind to localhost only: `FLASK_HOST=127.0.0.1`
+- **WSGI Server**: Use a production WSGI server (Gunicorn, uWSGI) instead of Flask dev server
+
+### Environment Variables for Production
+```bash
+export FLASK_SECRET_KEY="your-secure-random-key-here"
+export CORS_ALLOWED_ORIGINS="https://yourdomain.com"
+export FLASK_HOST="127.0.0.1"
+export FLASK_PORT="5000"
+export FLASK_DEBUG="False"
+```
+
+### HTTPS
+For production deployment, always use HTTPS:
+- Prevents man-in-the-middle attacks
+- Protects API keys during transmission
+- Required for secure WebSocket connections (WSS)
 
 ## Production Deployment
 
