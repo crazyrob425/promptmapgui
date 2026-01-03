@@ -1,0 +1,27 @@
+Welcome to PromptMapGUI Setup!
+
+PromptMapGUI is an automated prompt injection scanner for custom LLM applications.
+
+This installer will:
+- Install the PromptMapGUI application
+- Create shortcuts (if selected)
+- Set up all necessary files and dependencies
+
+SYSTEM REQUIREMENTS:
+- Windows 10 or Windows 11 (64-bit)
+- Python 3.8 or higher (required for running the application)
+- At least 500 MB of free disk space
+- Internet connection (for downloading LLM provider APIs)
+
+GETTING STARTED:
+After installation, you'll need to configure API keys for the LLM providers you want to test:
+- OpenAI: Set OPENAI_API_KEY environment variable
+- Anthropic: Set ANTHROPIC_API_KEY environment variable
+- Google: Set GOOGLE_API_KEY environment variable
+- XAI: Set XAI_API_KEY environment variable
+
+For local testing, you can use Ollama (no API key required).
+
+For detailed instructions, see the USER-INSTALL-GUIDE.md file in the installation directory.
+
+Click Next to continue with the installation.
